@@ -1,0 +1,68 @@
+4.2 Implementasi Proses Analisis Sentimen
+
+Pada tahap ini dilakukan proses implementasi analisis sentimen terhadap ulasan pengguna aplikasi AI (chatbot) yang telah dikumpulkan dari platform distribusi aplikasi. Proses ini melibatkan penerapan tahapan utama seperti preprocessing teks dengan memanfaatkan kamus slang dan library Sastrawi, pembobotan fitur menggunakan metode Term Frequency-Inverse Document Frequency (TF-IDF), serta klasifikasi sentimen menggunakan algoritma Random Forest untuk menghasilkan kategori opini pengguna secara akurat.
+
+1. Dataset
+Tahap ini menjelaskan proses implementasi dataset yang digunakan dalam sistem analisis sentimen ulasan pengguna terhadap aplikasi kecerdasan buatan (ChatGPT dan Gemini). Data yang digunakan dikumpulkan dari dua sumber utama, yaitu Google Play Store dan Apple App Store. Dataset digabungkan, disimpan dalam format CSV, dan diunggah melalui dashboard sistem agar dapat diproses oleh model Random Forest.
+
+a. Dataset ChatGPT
+Data diperoleh melalui penarikan data (scraping) pada ulasan aplikasi ChatGPT yang mencakup opini dari pengguna Android maupun iOS. Ulasan ini mencerminkan keluhan teknis, kepuasan terhadap fitur AI, serta performa aplikasi. Dataset ini digunakan bersama dataset Gemini sebagai data latih (training) dan uji (testing).
+
+b. Dataset Gemini
+Data diperoleh dengan cara yang sama pada ulasan aplikasi Google Gemini. Ulasan mencakup pengalaman interaksi pengguna, tingkat akurasi jawaban AI, dan bug yang dialami. Seluruh dataset kemudian dikompilasi menjadi satu kesatuan data mentah.
+
+Tabel 4.1 berikut menampilkan distribusi total data ulasan pengguna yang digunakan dalam proses klasifikasi sentimen aplikasi ChatGPT dan Gemini.
+
+Tabel 4.1 Distribusi Data Ulasan Pengguna Aplikasi AI
+No	Kategori Sentimen	Jumlah Data	Persentase
+1	Positif			2.635		42,43%
+2	Negatif			1.864		30,02%
+3	Netral			1.711		27,55%
+Total	-			6.210		100%
+
+Berdasarkan tabel tersebut, dapat diketahui bahwa mayoritas ulasan pengguna terhadap aplikasi ChatGPT dan Gemini bersentimen positif dengan proporsi sebesar 42,43%. Namun, persentase sentimen negatif (30,02%) dan netral (27,55%) juga cukup signifikan. Hasil ini menunjukkan bahwa meski banyak pengguna yang merasa terbantu, masih terdapat kendala teknis dan keluhan ketidakakuratan AI yang memicu sentimen negatif.
+
+Tabel 4.2 Sampel Dataset ChatGPT
+Nama Aplikasi	Ulasan Pengguna									Label Sentimen
+ChatGPT		Aplikasi ini sangat membantu pekerjaan saya sehari-hari. Sangat cerdas dan responsif!	Positif
+ChatGPT		Setelah diperbarui malah tidak bisa menyalin teks, harusnya jangan rilis perbaikan kalau malah makin bug.	Negatif
+ChatGPT		Saya tidak menerima kode OTP saat mencoba melakukan registrasi menggunakan nomor baru.	Netral
+ChatGPT		Tolong kembalikan versi GPT lama, versi baru performanya sangat mengecewakan.		Negatif
+
+Tabel 4.2 menampilkan beberapa ulasan wisatawan (pengguna) dari dataset ChatGPT yang mencakup sentimen positif, negatif, dan netral.
+
+Tabel 4.3 Sampel Dataset Gemini
+Nama Aplikasi	Ulasan Pengguna									Label Sentimen
+Gemini		UI-nya sangat elegan dan jauh lebih pintar dari asisten bawaan biasa. Kerja bagus!	Positif
+Gemini		Kenapa saya selalu mendapatkan notifikasi invalid phone number saat proses sign up?	Netral
+Gemini		Pada Februari semua berjalan lancar, tapi setelah itu messed up. Tidak bisa digunakan untuk menyelesaikan coding.	Negatif
+
+Tabel 4.3 menampilkan tiga data ulasan pengguna dari Gemini. Data gabungan ini nantinya akan dibagi menjadi proporsi training dan testing untuk melatih sekaligus menguji kemampuan model Random Forest dalam memprediksi sentimen baru.
+
+
+2. Preprocessing
+Tabel 4.4 menunjukkan enam tahapan utama dalam persiapan data teks, mulai dari cleaning hingga stemming, menggunakan salah satu contoh data asli ulasan aplikasi AI. Hasilnya memperlihatkan perubahan teks mentah yang penuh simbol dan kata tidak baku menjadi teks bersih, seragam, dan siap untuk tahap pembobotan TF-IDF.
+
+Tabel 4.4 Tahapan Proses Preprocessing Teks
+No	Tahapan Proses		Deskripsi Singkat						Contoh Sebelum			Contoh Sesudah
+1	Cleaning		Menghapus simbol, angka, emotikon, dan tanda baca yang tidak relevan.	"Setelah di perbarui malah ga bisa nyalin teks!!! #chatgpt_bug"	"Setelah di perbarui malah ga bisa nyalin teks"
+2	Case Folding		Mengubah semua huruf menjadi huruf kecil untuk menyeragamkan teks.	"Setelah di perbarui malah ga bisa nyalin teks"			"setelah di perbarui malah ga bisa nyalin teks"
+3	Tokenizing		Memecah kalimat menjadi potongan kata (token).			"setelah di perbarui malah ga bisa nyalin teks"			[setelah, di, perbarui, malah, ga, bisa, nyalin, teks]
+4	Normalization		Mengubah kata tidak baku dan singkatan (slang) menjadi bentuk baku.	[setelah, di, perbarui, malah, ga, bisa, nyalin, teks]		[setelah, di, perbarui, malah, tidak, bisa, salin, teks]
+5	Stopword Removal	Menghapus kata umum tak bermakna (Sastrawi & Blacklist).		[setelah, di, perbarui, malah, tidak, bisa, salin, teks]	[perbarui, salin, teks]
+6	Stemming		Mengembalikan kata ke bentuk dasarnya (imbuhan dihapus).		[perbarui, salin, teks]						[baru, salin, teks]
+
+
+3. Klasifikasi Metode Random Forest
+Tahap klasifikasi dilakukan menggunakan metode Random Forest (algoritma CART - Classification and Regression Trees) yang mendeteksi kombinasi pohon keputusan terbaik untuk menentukan kategori sentimen ulasan. Proses pembobotan menggunakan Smooth Inverse Document Frequency (TF-IDF) untuk mengekstraksi nilai dari setiap kata dasar hasil preprocessing. Tabel 4.5 berikut menampilkan contoh simulasi hasil klasifikasi sentimen antara label aktual dengan tebakan sistem.
+
+Tabel 4.5 Contoh Hasil Klasifikasi Random Forest
+No	Teks Ulasan Bersih (Stemming)		Label Asli	Prediksi Model	Status
+1	aplikasi bantu kerja hari cerdas responsif	Positif		Positif		Sesuai
+2	sayang respon lambat jaringan		Negatif		Negatif		Sesuai
+3	susah masuk akun tolak			Negatif		Negatif		Sesuai
+4	ai sangat bantu buat koding		Positif		Positif		Sesuai
+5	tolong ajar cara ganti bahasa		Netral		Netral		Sesuai
+6	ai kadang salah arti maksud prompt		Negatif		Negatif		Sesuai
+7	tampilan bagus fungsi kurang maksimal	Negatif		Positif		Tidak Sesuai
+8	tanya jawab cepat akurat			Positif		Positif		Sesuai

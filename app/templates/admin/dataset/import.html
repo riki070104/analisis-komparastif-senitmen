@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Impor Dataset{% endblock %}
+
+{% block content %}
+<div class="topbar flex-between">
+    <div>
+        <h1><i class="fas fa-file-import"></i> Impor Dataset</h1>
+        <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px;">Unggah file berisi review dan label sentimen untuk dimasukkan ke dataset Anda.</p>
+    </div>
+    <a href="{{ url_for('main.dataset_list') }}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="form-group">
+            <p style="margin-bottom: 15px; color: var(--text-dark);">Format file yang didukung:</p>
+            <ul style="color: var(--text-muted); margin-top: 0;">
+                <li>CSV dengan kolom <strong>text</strong> dan <strong>label</strong></li>
+                <li>XLSX / XLS dengan kolom <strong>text</strong> dan <strong>label</strong></li>
+                <li>Jika kolom tidak bernama, kolom pertama akan dianggap teks dan kolom kedua dianggap label</li>
+            </ul>
+            <p style="color: var(--text-muted);">Label yang valid: <strong>positive</strong>, <strong>negative</strong>, <strong>neutral</strong>.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('main.dataset_import') }}" enctype="multipart/form-data">
+            <!-- App Target & Platform for this entire CSV -->
+            <div style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="app_target">Aplikasi Tujuan</label>
+                    <select id="app_target" name="app_target" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" required>
+                        <option value="">-- Pilih Aplikasi --</option>
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Gemini">Gemini AI</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="file">Pilih File</label>
+                <input type="file" id="file" name="file" accept=".csv,.xlsx,.xls" required="">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload dan Impor
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
