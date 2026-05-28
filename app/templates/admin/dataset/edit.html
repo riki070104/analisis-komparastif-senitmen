@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Dataset{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <h1><i class="fas fa-edit"></i> Edit Data Dataset</h1>
+</div>
+
+<!-- Edit Dataset Form -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-pencil-alt"></i> Form Edit Data
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('main.dataset_edit', id=dataset.id) }}">
+            <div style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="app_target">Aplikasi Tujuan</label>
+                    <select id="app_target" name="app_target" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="ChatGPT" {% if dataset.app_target == 'ChatGPT' %}selected{% endif %}>ChatGPT</option>
+                        <option value="Gemini" {% if dataset.app_target == 'Gemini' %}selected{% endif %}>Gemini AI</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="text">Teks Ulasan</label>
+                <textarea id="text" name="text" required="" placeholder="Masukkan teks..." maxlength="5000">{{ dataset.text }}</textarea>
+                <small style="color: var(--text-muted);">Maksimal 5000 karakter | <span id="char-count">{{ dataset.text|length }}</span>/5000</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="label">Label Sentimen</label>
+                <select id="label" name="label" required="">
+                    <option value="">-- Pilih Label --</option>
+                    <option value="positive" {% if dataset.label == 'positive' %}selected{% endif %}>😊 Positif</option>
+                    <option value="negative" {% if dataset.label == 'negative' %}selected{% endif %}>😞 Negatif</option>
+                    <option value="neutral" {% if dataset.label == 'neutral' %}selected{% endif %}>😐 Netral</option>
+                </select>
+            </div>
+            
+            <div class="flex-gap-10">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Perbarui
+                </button>
+                <a href="{{ url_for('main.dataset_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Character counter
+document.getElementById('text').addEventListener('input', function() {
+    document.getElementById('char-count').textContent = this.value.length;
+});
+</script>
+{% endblock %}

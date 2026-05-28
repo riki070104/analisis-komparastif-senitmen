@@ -1,0 +1,47 @@
+{
+    "accuracy": 77.62,
+    "matrix": {
+        "positive": {
+            "positive": 454,
+            "negative": 52,
+            "neutral": 28
+        },
+        "negative": {
+            "positive": 26,
+            "negative": 318,
+            "neutral": 36
+        },
+        "neutral": {
+            "positive": 74,
+            "negative": 62,
+            "neutral": 192
+        }
+    },
+    "metrics": {
+        "positive": {
+            "precision": 81.95,
+            "recall": 85.02,
+            "f1": 83.46,
+            "support": 534
+        },
+        "negative": {
+            "precision": 73.61,
+            "recall": 83.68,
+            "f1": 78.33,
+            "support": 380
+        },
+        "neutral": {
+            "precision": 75.0,
+            "recall": 58.54,
+            "f1": 65.75,
+            "support": 328
+        }
+    },
+    "total_samples": 1242,
+    "labels": [
+        "positive",
+        "negative",
+        "neutral"
+    ],
+    "train_samples": 4964
+}

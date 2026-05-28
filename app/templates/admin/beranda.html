@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Beranda Admin{% endblock %}
+
+{% block content %}
+<div class="topbar flex-between" style="margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0;"><i class="fas fa-chart-bar"></i> Beranda Admin</h1>
+        <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px;">Ringkasan hasil analisis sentimen ChatGPT dan Gemini AI.</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <!-- Card Total Dataset -->
+    <div style="background-color: #fff; padding: 20px; border-radius: 12px; border-left: 5px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h5 style="color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 5px; text-transform: uppercase;">Total Dataset</h5>
+            <p style="font-size: 32px; font-weight: bold; margin: 0; color: var(--text-dark);">{{ total_analyses }}</p>
+        </div>
+        <div style="background-color: rgba(67, 97, 238, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-database" style="font-size: 24px; color: var(--primary-color);"></i>
+        </div>
+    </div>
+    
+    <!-- Card Sudah Preprocess -->
+    <div style="background-color: #fff; padding: 20px; border-radius: 12px; border-left: 5px solid var(--success-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h5 style="color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 5px; text-transform: uppercase;">Sudah Diproses</h5>
+            <p style="font-size: 32px; font-weight: bold; margin: 0; color: var(--success-color);">{{ total_processed }}</p>
+        </div>
+        <div style="background-color: rgba(46, 204, 113, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-broom" style="font-size: 24px; color: var(--success-color);"></i>
+        </div>
+    </div>
+
+    <!-- Card Belum Preprocess -->
+    <div style="background-color: #fff; padding: 20px; border-radius: 12px; border-left: 5px solid var(--warning-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h5 style="color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 5px; text-transform: uppercase;">Belum Diproses</h5>
+            <p style="font-size: 32px; font-weight: bold; margin: 0; color: #d39e00;">{{ total_unprocessed }}</p>
+        </div>
+        <div style="background-color: rgba(241, 196, 15, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-exclamation-circle" style="font-size: 24px; color: #d39e00;"></i>
+        </div>
+    </div>
+    
+    <!-- Card Total Sentimen -->
+    <div style="background-color: #fff; padding: 20px; border-radius: 12px; border-left: 5px solid var(--secondary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h5 style="color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 5px; text-transform: uppercase;">Sentimen Valid</h5>
+            <p style="font-size: 32px; font-weight: bold; margin: 0; color: var(--secondary-color);">{{ chatgpt_pos + chatgpt_neg + chatgpt_neu + gemini_pos + gemini_neg + gemini_neu }}</p>
+        </div>
+        <div style="background-color: rgba(58, 12, 163, 0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-tags" style="font-size: 24px; color: var(--secondary-color);"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Charts (ChatGPT vs Gemini) -->
+<div class="card" style="margin-bottom: 30px;">
+    <div class="card-body">
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 15px 0; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); color: var(--text-dark);">
+            <i class="fas fa-balance-scale"></i> Komparasi Sentimen: ChatGPT vs Gemini AI
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div style="background-color: var(--light-bg); padding: 15px; border-radius: 8px;">
+                <h4 style="text-align: center; margin-bottom: 15px; font-size: 14px; color: var(--text-dark);">ChatGPT</h4>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="chatgptChart"></canvas>
+                </div>
+            </div>
+            
+            <div style="background-color: var(--light-bg); padding: 15px; border-radius: 8px;">
+                <h4 style="text-align: center; margin-bottom: 15px; font-size: 14px; color: var(--text-dark);">Gemini AI</h4>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="geminiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Analyses Section -->
+<div class="card" style="margin-bottom: 30px;">
+    <div class="card-body">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);">
+                <i class="fas fa-history"></i> Dataset Terakhir
+            </h3>
+            {% if recent_histories %}
+            <a href="{{ url_for('main.dataset_list') }}" class="btn btn-outline btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                Lihat Semua <i class="fas fa-arrow-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        
+        {% if recent_histories %}
+        <div style="overflow-x: auto;">
+            <table style="margin: 0; width: 100%; font-size: 13px;">
+                <thead>
+                    <tr style="background-color: transparent;">
+                        <th style="text-align: left; padding: 10px 8px; color: var(--text-muted);">Aplikasi</th>
+                        <th style="text-align: left; padding: 10px 8px; color: var(--text-muted);">Teks</th>
+                        <th style="text-align: center; padding: 10px 8px; color: var(--text-muted);">Sentimen</th>
+                        <th style="text-align: center; padding: 10px 8px; color: var(--text-muted);">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in recent_histories %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 10px 8px; font-weight: bold;">
+                            {{ history.app_target or '-' }}
+                        </td>
+                        <td style="padding: 10px 8px; color: var(--text-dark);">{{ history.text[:55] }}{% if history.text|length > 55 %}...{% endif %}</td>
+                        <td style="padding: 10px 8px; text-align: center;">
+                            <span class="badge badge-{{ history.label }}" style="font-size: 10px; padding: 4px 8px;">
+                                {{ history.label | upper }}
+                            </span>
+                        </td>
+                        <td style="padding: 10px 8px; text-align: center;">
+                            {% if history.cleaned_text %}
+                                <span class="badge bg-success" style="font-size: 10px; padding: 4px 8px;">Preprocessed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark" style="font-size: 10px; padding: 4px 8px;">Mentah</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px;">
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">
+                Belum ada data. <a href="{{ url_for('main.dataset_list') }}" style="color: var(--secondary-color); font-weight: 600;">Lihat Dataset →</a>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var chatgptPos = parseInt("{{ chatgpt_pos }}") || 0;
+    var chatgptNeg = parseInt("{{ chatgpt_neg }}") || 0;
+    var chatgptNeu = parseInt("{{ chatgpt_neu }}") || 0;
+    var geminiPos = parseInt("{{ gemini_pos }}") || 0;
+    var geminiNeg = parseInt("{{ gemini_neg }}") || 0;
+    var geminiNeu = parseInt("{{ gemini_neu }}") || 0;
+
+    var chatgptData = {
+        labels: ['Positif', 'Negatif', 'Netral'],
+        datasets: [{
+            data: [chatgptPos, chatgptNeg, chatgptNeu],
+            backgroundColor: ['#2ecc71', '#e74c3c', '#f1c40f']
+        }]
+    };
+    var geminiData = {
+        labels: ['Positif', 'Negatif', 'Netral'],
+        datasets: [{
+            data: [geminiPos, geminiNeg, geminiNeu],
+            backgroundColor: ['#2ecc71', '#e74c3c', '#f1c40f']
+        }]
+    };
+
+    new Chart(document.getElementById('chatgptChart'), {
+        type: 'pie',
+        data: chatgptData,
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('geminiChart'), {
+        type: 'pie',
+        data: geminiData,
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+});
+</script>
+{% endblock %}

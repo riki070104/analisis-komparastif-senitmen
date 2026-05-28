@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Evaluasi Model{% endblock %}
+
+{% block content %}
+<div class="topbar flex-between">
+    <div>
+        <h1><i class="fas fa-chart-line"></i> Evaluasi Model</h1>
+        <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px;">Hasil pengujian Akurasi Model AI pada 20% Data Uji (Test Data) menggunakan Confusion Matrix.</p>
+    </div>
+</div>
+
+{% if matrix %}
+<!-- Metrik Utama -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
+    <div class="stat-card total" style="text-align: center;">
+        <div class="stat-number" style="color: var(--secondary-color);">{{ accuracy }}%</div>
+        <div class="stat-label">Akurasi Keseluruhan</div>
+    </div>
+    {% for label in labels %}
+    <div class="stat-card {% if label == 'positive' %}positive{% elif label == 'negative' %}negative{% else %}neutral{% endif %}" style="text-align: center;">
+        <div class="stat-number" style="font-size: 24px;">{{ metrics[label]['f1'] }}%</div>
+        <div class="stat-label">F1-Score {{ label | capitalize }}</div>
+    </div>
+    {% endfor %}
+    <div class="stat-card" style="text-align: center; border-left-color: var(--text-muted);">
+        <div class="stat-number" style="font-size: 24px;">{{ total_samples }}</div>
+        <div class="stat-label">Total Data Uji (20%)</div>
+    </div>
+    {% if train_samples %}
+    <div class="stat-card" style="text-align: center; border-left-color: var(--primary-color);">
+        <div class="stat-number" style="font-size: 24px;">{{ train_samples }}</div>
+        <div class="stat-label">Total Data Latih (80%)</div>
+    </div>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Confusion Matrix -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header">
+            <i class="fas fa-border-all"></i> Confusion Matrix (Evaluasi pada Data Uji)
+        </div>
+        <div class="card-body">
+            <div style="overflow-x: auto;">
+                <table class="table table-bordered text-center" style="margin-bottom: 0;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" colspan="2" style="border: none; background: white;"></th>
+                            <th colspan="3" style="background-color: var(--light-bg); text-align: center;">Kelas Prediksi</th>
+                        </tr>
+                        <tr>
+                            <th style="text-align: center; color: var(--success-color);">Positif</th>
+                            <th style="text-align: center; color: var(--danger-color);">Negatif</th>
+                            <th style="text-align: center; color: var(--warning-color);">Netral</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th rowspan="3" style="background-color: var(--light-bg); vertical-align: middle; writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; width: 40px;">Kelas Asli</th>
+                            <th style="text-align: left; color: var(--success-color);">Positif</th>
+                            <td class="{% if matrix['positive']['positive'] > 0 %}table-success{% endif %}" style="font-weight: bold; font-size: 18px;">
+                                {{ matrix['positive']['positive'] }}
+                            </td>
+                            <td>{{ matrix['positive']['negative'] }}</td>
+                            <td>{{ matrix['positive']['neutral'] }}</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left; color: var(--danger-color);">Negatif</th>
+                            <td>{{ matrix['negative']['positive'] }}</td>
+                            <td class="{% if matrix['negative']['negative'] > 0 %}table-danger{% endif %}" style="font-weight: bold; font-size: 18px;">
+                                {{ matrix['negative']['negative'] }}
+                            </td>
+                            <td>{{ matrix['negative']['neutral'] }}</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left; color: var(--warning-color);">Netral</th>
+                            <td>{{ matrix['neutral']['positive'] }}</td>
+                            <td>{{ matrix['neutral']['negative'] }}</td>
+                            <td class="{% if matrix['neutral']['neutral'] > 0 %}table-warning{% endif %}" style="font-weight: bold; font-size: 18px;">
+                                {{ matrix['neutral']['neutral'] }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 15px; margin-bottom: 0;">
+                <i class="fas fa-info-circle"></i> Sel diagonal (berwarna) menunjukkan prediksi benar (<em>True Positives</em>).
+            </p>
+        </div>
+    </div>
+
+    <!-- Detail Metrik per Kelas -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-header">
+            <i class="fas fa-list-ul"></i> Laporan Klasifikasi
+        </div>
+        <div class="card-body">
+            <table style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th>Kelas</th>
+                        <th style="text-align: center;">Precision</th>
+                        <th style="text-align: center;">Recall</th>
+                        <th style="text-align: center;">F1-Score</th>
+                        <th style="text-align: center;">Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for label in labels %}
+                    <tr>
+                        <td>
+                            {% if label == 'positive' %}<span class="badge badge-positive">😊 Positif</span>
+                            {% elif label == 'negative' %}<span class="badge badge-negative">😞 Negatif</span>
+                            {% else %}<span class="badge badge-neutral">😐 Netral</span>{% endif %}
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">{{ metrics[label]['precision'] }}%</td>
+                        <td style="text-align: center; font-weight: 600;">{{ metrics[label]['recall'] }}%</td>
+                        <td style="text-align: center; font-weight: 600;">{{ metrics[label]['f1'] }}%</td>
+                        <td style="text-align: center;">{{ metrics[label]['support'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; padding: 15px; background-color: var(--light-bg); border-radius: 6px; font-size: 13px; color: #555;">
+                <strong><i class="fas fa-book-open"></i> Cara membaca metrik:</strong>
+                <ul style="margin-bottom: 0; padding-left: 18px; margin-top: 8px; line-height: 1.8;">
+                    <li><strong>Precision:</strong> Dari semua prediksi kelas X, berapa persen yang benar?</li>
+                    <li><strong>Recall:</strong> Dari semua data aktual kelas X, berapa persen yang terdeteksi?</li>
+                    <li><strong>F1-Score:</strong> Rata-rata harmonis Precision & Recall (indikator keseimbangan).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tes Sentimen Manual -->
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="fas fa-keyboard"></i> Uji Prediksi Manual
+    </div>
+    <div class="card-body">
+        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Ketikkan kata atau kalimat baru di bawah ini untuk melihat bagaimana model Anda mengklasifikasikan sentimennya berdasarkan pembelajaran sebelumnya.</p>
+        
+        <div class="mb-3">
+            <textarea id="manualTextInput" class="form-control" rows="3" placeholder="Contoh: Aplikasi ini sangat membantu pekerjaan saya sehari-hari..."></textarea>
+        </div>
+        
+        <button id="btnPredictManual" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Analisis Sentimen
+        </button>
+        
+        <div id="predictResultContainer" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; background-color: #f8f9fa;">
+            <h6 style="margin-top: 0; margin-bottom: 15px; font-weight: bold; color: #495057;">Hasil Analisis:</h6>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div id="predictResultBadge" style="font-size: 16px; padding: 8px 15px; border-radius: 20px; font-weight: bold;">
+                    <!-- Badge will be injected here -->
+                </div>
+                <div style="color: #6c757d; font-size: 14px;">
+                    Keyakinan (Confidence): <strong id="predictConfidence">0%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="card" style="margin-top: 10px;">
+    <div class="card-body text-center" style="padding: 60px 20px;">
+        <i class="fas fa-flask" style="font-size: 48px; color: var(--border-color); margin-bottom: 15px;"></i>
+        <h3 style="color: var(--text-muted); margin-bottom: 10px;">Belum Ada Hasil Evaluasi</h3>
+        <p style="color: #999; max-width: 500px; margin: 0 auto;">Model Anda belum memiliki hasil evaluasi terbaru. Silakan menuju halaman <strong>Klasifikasi</strong> dan lakukan <strong>Latih Model</strong>. Proses latih model secara otomatis akan memisahkan data 80:20 dan mengevaluasi sisa 20% uji secara rahasia untuk ditampilkan di sini.</p>
+        <a href="{{ url_for('main.klasifikasi') }}" class="btn btn-primary mt-4"><i class="fas fa-arrow-right"></i> Pergi ke Klasifikasi</a>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnPredict = document.getElementById('btnPredictManual');
+    const inputArea = document.getElementById('manualTextInput');
+    const resultContainer = document.getElementById('predictResultContainer');
+    const badgeEl = document.getElementById('predictResultBadge');
+    const confEl = document.getElementById('predictConfidence');
+    
+    if (btnPredict) {
+        btnPredict.addEventListener('click', function() {
+            const text = inputArea.value.trim();
+            if (!text) {
+                alert('Silakan masukkan teks terlebih dahulu!');
+                return;
+            }
+            
+            // Loading state
+            btnPredict.disabled = true;
+            btnPredict.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menganalisis...';
+            
+            fetch('{{ url_for("main.api_predict") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btnPredict.disabled = false;
+                btnPredict.innerHTML = '<i class="fas fa-magic"></i> Analisis Sentimen';
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Show result
+                resultContainer.style.display = 'block';
+                
+                const confidencePercent = (data.confidence * 100).toFixed(2);
+                confEl.innerText = confidencePercent + '%';
+                
+                if (data.sentiment === 'positive') {
+                    badgeEl.className = 'badge badge-positive';
+                    badgeEl.innerHTML = '😊 Positif';
+                    badgeEl.style.backgroundColor = '#d1e7dd';
+                    badgeEl.style.color = '#0f5132';
+                } else if (data.sentiment === 'negative') {
+                    badgeEl.className = 'badge badge-negative';
+                    badgeEl.innerHTML = '😞 Negatif';
+                    badgeEl.style.backgroundColor = '#f8d7da';
+                    badgeEl.style.color = '#842029';
+                } else {
+                    badgeEl.className = 'badge badge-neutral';
+                    badgeEl.innerHTML = '😐 Netral';
+                    badgeEl.style.backgroundColor = '#fff3cd';
+                    badgeEl.style.color = '#664d03';
+                }
+            })
+            .catch(error => {
+                btnPredict.disabled = false;
+                btnPredict.innerHTML = '<i class="fas fa-magic"></i> Analisis Sentimen';
+                alert('Terjadi kesalahan koneksi.');
+                console.error(error);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
