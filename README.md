@@ -1,3 +1,12 @@
+---
+title: Sentimen App
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # SentimentApp - Aplikasi Analisis Sentimen dengan Flask
 
 Aplikasi web sederhana untuk menganalisis sentimen teks menggunakan Python Flask.
