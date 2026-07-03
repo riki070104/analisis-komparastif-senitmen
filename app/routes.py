@@ -32,6 +32,8 @@ def index():
         
         # Ambil 50 ulasan terbaru untuk ditampilkan
         reviews = Dataset.query.filter_by(app_target=app_target).filter(Dataset.cleaned_text != None).order_by(desc(Dataset.created_at)).limit(50).all()
+        
+        return render_template('index.html', app_target=app_target, chart_data=chart_data, reviews=reviews)
     else:
         # Tampilkan ringkasan global
         datasets = Dataset.query.filter(Dataset.cleaned_text != None).all()
@@ -47,10 +49,43 @@ def index():
             'total': len(datasets)
         }
         
+        # Breakdown komparasi (coba baca dari eval_metrics 20% testing data)
+        import os, json
+        model_dir = os.path.join(os.path.dirname(__file__), 'model')
+        eval_file = os.path.join(model_dir, 'eval_metrics.json')
+        comparison_stats = None
+        
+        if os.path.exists(eval_file):
+            try:
+                with open(eval_file, 'r') as f:
+                    eval_data = json.load(f)
+                    # Cek apakah menggunakan format multi-split (80/75/70)
+                    if '80' in eval_data and 'test_comparison_stats' in eval_data['80']:
+                        comparison_stats = eval_data['80']['test_comparison_stats']
+                    elif 'test_comparison_stats' in eval_data:
+                        comparison_stats = eval_data['test_comparison_stats']
+            except:
+                pass
+                
+        # Fallback jika model belum dilatih atau file rusak
+        if not comparison_stats:
+            chatgpt_pos = sum(1 for d in datasets if d.app_target == 'ChatGPT' and d.label == 'positive')
+            chatgpt_neg = sum(1 for d in datasets if d.app_target == 'ChatGPT' and d.label == 'negative')
+            chatgpt_neu = sum(1 for d in datasets if d.app_target == 'ChatGPT' and d.label == 'neutral')
+            
+            gemini_pos = sum(1 for d in datasets if d.app_target == 'Gemini' and d.label == 'positive')
+            gemini_neg = sum(1 for d in datasets if d.app_target == 'Gemini' and d.label == 'negative')
+            gemini_neu = sum(1 for d in datasets if d.app_target == 'Gemini' and d.label == 'neutral')
+            
+            comparison_stats = {
+                'chatgpt_pos': chatgpt_pos, 'chatgpt_neg': chatgpt_neg, 'chatgpt_neu': chatgpt_neu,
+                'gemini_pos': gemini_pos, 'gemini_neg': gemini_neg, 'gemini_neu': gemini_neu
+            }
+        
         # Ambil 50 ulasan terbaru gabungan
         reviews = Dataset.query.filter(Dataset.cleaned_text != None).order_by(desc(Dataset.created_at)).limit(50).all()
     
-    return render_template('index.html', app_target=app_target, chart_data=chart_data, reviews=reviews, global_stats=global_stats)
+        return render_template('index.html', app_target=app_target, global_stats=global_stats, comparison_stats=comparison_stats, reviews=reviews)
 
 @main_bp.route('/home')
 @login_required
@@ -60,15 +95,45 @@ def home():
 @main_bp.route('/beranda')
 @login_required
 def beranda():
-    # Get statistics for ChatGPT
-    chatgpt_pos = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='positive').count()
-    chatgpt_neg = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='negative').count()
-    chatgpt_neu = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='neutral').count()
+    import os, json
+    model_dir = os.path.join(os.path.dirname(__file__), 'model')
+    eval_file = os.path.join(model_dir, 'eval_metrics.json')
+    
+    chatgpt_pos = chatgpt_neg = chatgpt_neu = 0
+    gemini_pos = gemini_neg = gemini_neu = 0
+    
+    # Baca hasil evaluasi prediksi 20% test set
+    if os.path.exists(eval_file):
+        try:
+            with open(eval_file, 'r') as f:
+                eval_data = json.load(f)
+                stats = None
+                # Cek apakah menggunakan format multi-split (80/75/70)
+                if '80' in eval_data and 'test_comparison_stats' in eval_data['80']:
+                    stats = eval_data['80']['test_comparison_stats']
+                elif 'test_comparison_stats' in eval_data:
+                    stats = eval_data['test_comparison_stats']
+                    
+                if stats:
+                    chatgpt_pos = stats.get('chatgpt_pos', 0)
+                    chatgpt_neg = stats.get('chatgpt_neg', 0)
+                    chatgpt_neu = stats.get('chatgpt_neu', 0)
+                    gemini_pos = stats.get('gemini_pos', 0)
+                    gemini_neg = stats.get('gemini_neg', 0)
+                    gemini_neu = stats.get('gemini_neu', 0)
+        except Exception as e:
+            print(f"Error reading eval metrics: {e}")
+            pass
 
-    # Get statistics for Gemini
-    gemini_pos = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='positive').count()
-    gemini_neg = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='negative').count()
-    gemini_neu = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='neutral').count()
+    # Jika belum ada hasil test (fallback ke manual dataset count)
+    if (chatgpt_pos + chatgpt_neg + chatgpt_neu + gemini_pos + gemini_neg + gemini_neu) == 0:
+        chatgpt_pos = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='positive').count()
+        chatgpt_neg = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='negative').count()
+        chatgpt_neu = Dataset.query.filter_by(user_id=current_user.id, app_target='ChatGPT', label='neutral').count()
+    
+        gemini_pos = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='positive').count()
+        gemini_neg = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='negative').count()
+        gemini_neu = Dataset.query.filter_by(user_id=current_user.id, app_target='Gemini', label='neutral').count()
     
     # Get recent datasets
     recent_histories = Dataset.query.filter_by(user_id=current_user.id)\
@@ -387,14 +452,14 @@ def run_preprocessing_job(app):
     else:
         TRAINING_STATUS["message"] = "Gagal memproses teks. Periksa log."
 
-def run_training_job(preprocessed_texts, labels):
+def run_training_job(preprocessed_texts, labels, app_targets):
     global TRAINING_STATUS
     TRAINING_STATUS["is_training"] = True
     TRAINING_STATUS["progress"] = 0
     TRAINING_STATUS["message"] = "Menyiapkan data training..."
     
     from .ml_pipeline.train_model import train_from_data
-    success = train_from_data(preprocessed_texts, labels, status_callback=update_training_status)
+    success = train_from_data(preprocessed_texts, labels, app_targets, status_callback=update_training_status)
     
     TRAINING_STATUS["is_training"] = False
     if success:
@@ -436,9 +501,10 @@ def train_model():
         
     texts = [d.cleaned_text for d in datasets]
     labels = [d.label for d in datasets]
+    app_targets = [d.app_target for d in datasets]
     
     # Jalankan training di background agar tidak timeout
-    thread = threading.Thread(target=run_training_job, args=(texts, labels))
+    thread = threading.Thread(target=run_training_job, args=(texts, labels, app_targets))
     thread.daemon = True
     thread.start()
     
@@ -465,17 +531,23 @@ def evaluasi():
             with open(eval_file, 'r') as f:
                 eval_data = json.load(f)
                 
-            return render_template('admin/evaluasi.html',
-                                 matrix=eval_data['matrix'],
-                                 accuracy=eval_data['accuracy'],
-                                 metrics=eval_data['metrics'],
-                                 total_samples=eval_data['total_samples'],
-                                 labels=eval_data['labels'],
-                                 train_samples=eval_data.get('train_samples', 0))
+            # Cek apakah format baru (multi-split) atau format lama
+            if '80' in eval_data:
+                return render_template('admin/evaluasi.html', eval_data=eval_data, is_multi=True)
+            else:
+                # Format lama
+                return render_template('admin/evaluasi.html',
+                                     matrix=eval_data.get('matrix'),
+                                     accuracy=eval_data.get('accuracy'),
+                                     metrics=eval_data.get('metrics'),
+                                     total_samples=eval_data.get('total_samples'),
+                                     labels=eval_data.get('labels'),
+                                     train_samples=eval_data.get('train_samples', 0),
+                                     is_multi=False)
         except Exception as e:
             flash(f'Gagal membaca hasil evaluasi: {str(e)}', 'danger')
             
-    return render_template('admin/evaluasi.html')
+    return render_template('admin/evaluasi.html', is_multi=False)
 
 @main_bp.route('/evaluasi/run', methods=['POST'])
 @login_required
@@ -508,4 +580,40 @@ def api_predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@main_bp.route('/komparasi')
+@login_required
+def komparasi():
+    import os, json
+    model_dir = os.path.join(os.path.dirname(__file__), 'model')
+    predictions_file = os.path.join(model_dir, 'test_predictions.json')
+    
+    chatgpt_data = []
+    gemini_data = []
+    
+    if os.path.exists(predictions_file):
+        try:
+            with open(predictions_file, 'r') as f:
+                predictions = json.load(f)
+                
+            for p in predictions:
+                if p.get('app_target') == 'ChatGPT':
+                    chatgpt_data.append(p)
+                elif p.get('app_target') == 'Gemini':
+                    gemini_data.append(p)
+        except Exception as e:
+            flash(f'Gagal membaca data komparasi: {str(e)}', 'danger')
+            
+    # Calculate stats for the chart
+    stats = {
+        'chatgpt_pos': sum(1 for d in chatgpt_data if d['predicted_label'] == 'positive'),
+        'chatgpt_neg': sum(1 for d in chatgpt_data if d['predicted_label'] == 'negative'),
+        'chatgpt_neu': sum(1 for d in chatgpt_data if d['predicted_label'] == 'neutral'),
+        'gemini_pos': sum(1 for d in gemini_data if d['predicted_label'] == 'positive'),
+        'gemini_neg': sum(1 for d in gemini_data if d['predicted_label'] == 'negative'),
+        'gemini_neu': sum(1 for d in gemini_data if d['predicted_label'] == 'neutral'),
+    }
 
+    return render_template('admin/komparasi.html', 
+                         chatgpt_data=chatgpt_data, 
+                         gemini_data=gemini_data,
+                         stats=stats)

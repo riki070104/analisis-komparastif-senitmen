@@ -10,3 +10,4 @@ joblib
 Sastrawi
 pymysql
 cryptography
+gunicorn==21.2.0

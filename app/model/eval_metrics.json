@@ -1,47 +1,167 @@
 {
-    "accuracy": 77.62,
-    "matrix": {
-        "positive": {
-            "positive": 454,
-            "negative": 52,
-            "neutral": 28
+    "80": {
+        "accuracy": 78.9,
+        "matrix": {
+            "positive": {
+                "positive": 453,
+                "negative": 51,
+                "neutral": 30
+            },
+            "negative": {
+                "positive": 22,
+                "negative": 327,
+                "neutral": 31
+            },
+            "neutral": {
+                "positive": 62,
+                "negative": 66,
+                "neutral": 200
+            }
         },
-        "negative": {
-            "positive": 26,
-            "negative": 318,
-            "neutral": 36
+        "metrics": {
+            "positive": {
+                "precision": 84.36,
+                "recall": 84.83,
+                "f1": 84.59,
+                "support": 534
+            },
+            "negative": {
+                "precision": 73.65,
+                "recall": 86.05,
+                "f1": 79.37,
+                "support": 380
+            },
+            "neutral": {
+                "precision": 76.63,
+                "recall": 60.98,
+                "f1": 67.91,
+                "support": 328
+            }
         },
-        "neutral": {
-            "positive": 74,
-            "negative": 62,
-            "neutral": 192
+        "total_samples": 1242,
+        "labels": [
+            "positive",
+            "negative",
+            "neutral"
+        ],
+        "train_samples": 4964,
+        "test_comparison_stats": {
+            "chatgpt_pos": 282,
+            "chatgpt_neg": 157,
+            "chatgpt_neu": 111,
+            "gemini_pos": 255,
+            "gemini_neg": 287,
+            "gemini_neu": 150
         }
     },
-    "metrics": {
-        "positive": {
-            "precision": 81.95,
-            "recall": 85.02,
-            "f1": 83.46,
-            "support": 534
+    "75": {
+        "accuracy": 77.38,
+        "matrix": {
+            "positive": {
+                "positive": 555,
+                "negative": 52,
+                "neutral": 43
+            },
+            "negative": {
+                "positive": 40,
+                "negative": 402,
+                "neutral": 46
+            },
+            "neutral": {
+                "positive": 89,
+                "negative": 81,
+                "neutral": 244
+            }
         },
-        "negative": {
-            "precision": 73.61,
-            "recall": 83.68,
-            "f1": 78.33,
-            "support": 380
+        "metrics": {
+            "positive": {
+                "precision": 81.14,
+                "recall": 85.38,
+                "f1": 83.21,
+                "support": 650
+            },
+            "negative": {
+                "precision": 75.14,
+                "recall": 82.38,
+                "f1": 78.59,
+                "support": 488
+            },
+            "neutral": {
+                "precision": 73.27,
+                "recall": 58.94,
+                "f1": 65.33,
+                "support": 414
+            }
         },
-        "neutral": {
-            "precision": 75.0,
-            "recall": 58.54,
-            "f1": 65.75,
-            "support": 328
+        "total_samples": 1552,
+        "labels": [
+            "positive",
+            "negative",
+            "neutral"
+        ],
+        "train_samples": 4654,
+        "test_comparison_stats": {
+            "chatgpt_pos": 359,
+            "chatgpt_neg": 183,
+            "chatgpt_neu": 155,
+            "gemini_pos": 325,
+            "gemini_neg": 352,
+            "gemini_neu": 178
         }
     },
-    "total_samples": 1242,
-    "labels": [
-        "positive",
-        "negative",
-        "neutral"
-    ],
-    "train_samples": 4964
+    "70": {
+        "accuracy": 77.07,
+        "matrix": {
+            "positive": {
+                "positive": 646,
+                "negative": 65,
+                "neutral": 56
+            },
+            "negative": {
+                "positive": 48,
+                "negative": 486,
+                "neutral": 50
+            },
+            "neutral": {
+                "positive": 110,
+                "negative": 98,
+                "neutral": 303
+            }
+        },
+        "metrics": {
+            "positive": {
+                "precision": 80.35,
+                "recall": 84.22,
+                "f1": 82.24,
+                "support": 767
+            },
+            "negative": {
+                "precision": 74.88,
+                "recall": 83.22,
+                "f1": 78.83,
+                "support": 584
+            },
+            "neutral": {
+                "precision": 74.08,
+                "recall": 59.3,
+                "f1": 65.87,
+                "support": 511
+            }
+        },
+        "total_samples": 1862,
+        "labels": [
+            "positive",
+            "negative",
+            "neutral"
+        ],
+        "train_samples": 4344,
+        "test_comparison_stats": {
+            "chatgpt_pos": 434,
+            "chatgpt_neg": 233,
+            "chatgpt_neu": 189,
+            "gemini_pos": 370,
+            "gemini_neg": 416,
+            "gemini_neu": 220
+        }
+    }
 }

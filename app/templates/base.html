@@ -56,6 +56,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url_for('main.komparasi') }}" title="Komparasi" class="{% if request.endpoint == 'main.komparasi' %}active{% endif %}">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Komparasi Sentimen</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url_for('main.about') }}" title="Tentang" class="{% if request.endpoint == 'main.about' %}active{% endif %}">
                         <i class="fas fa-circle-info"></i>
                         <span>Tentang</span>
@@ -75,10 +81,10 @@
         
         <!-- MAIN CONTENT -->
         <main class="main-content">
-            <!-- Mobile Hamburger Menu Button
+            <!-- Mobile Hamburger Menu Button -->
             <button class="hamburger-btn" id="mobileMenuBtn" title="Menu">
                 <i class="fas fa-bars"></i>
-            </button> -->
+            </button>
             
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}

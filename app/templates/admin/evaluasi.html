@@ -10,7 +10,7 @@
     </div>
 </div>
 
-{% if matrix %}
+{% macro render_evaluation(matrix, accuracy, metrics, total_samples, labels, train_samples) %}
 <!-- Metrik Utama -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
     <div class="stat-card total" style="text-align: center;">
@@ -25,17 +25,17 @@
     {% endfor %}
     <div class="stat-card" style="text-align: center; border-left-color: var(--text-muted);">
         <div class="stat-number" style="font-size: 24px;">{{ total_samples }}</div>
-        <div class="stat-label">Total Data Uji (20%)</div>
+        <div class="stat-label">Total Data Uji</div>
     </div>
     {% if train_samples %}
     <div class="stat-card" style="text-align: center; border-left-color: var(--primary-color);">
         <div class="stat-number" style="font-size: 24px;">{{ train_samples }}</div>
-        <div class="stat-label">Total Data Latih (80%)</div>
+        <div class="stat-label">Total Data Latih</div>
     </div>
     {% endif %}
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
     <!-- Confusion Matrix -->
     <div class="card" style="margin-bottom: 0;">
         <div class="card-header">
@@ -134,6 +134,36 @@
         </div>
     </div>
 </div>
+{% endmacro %}
+
+{% if (is_multi and eval_data) or matrix %}
+
+{% if is_multi and eval_data %}
+<ul class="nav nav-tabs" id="evalTabs" role="tablist" style="margin-bottom: 20px;">
+    {% for ratio in ['80', '75', '70'] %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-{{ ratio }}" data-bs-toggle="tab" data-bs-target="#pane-{{ ratio }}" type="button" role="tab" aria-controls="pane-{{ ratio }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" style="font-weight: 600;">
+            <i class="fas fa-columns"></i> Rasio {{ ratio }}:{{ 100 - ratio|int }}
+        </button>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="tab-content" id="evalTabsContent">
+    {% for ratio in ['80', '75', '70'] %}
+        {% if eval_data[ratio] %}
+            {% set m_data = eval_data[ratio] %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="pane-{{ ratio }}" role="tabpanel" aria-labelledby="tab-{{ ratio }}">
+                {{ render_evaluation(m_data['matrix'], m_data['accuracy'], m_data['metrics'], m_data['total_samples'], m_data['labels'], m_data['train_samples']) }}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% elif matrix %}
+<!-- Format Lama -->
+{{ render_evaluation(matrix, accuracy, metrics, total_samples, labels, train_samples) }}
+{% endif %}
 
 <!-- Tes Sentimen Manual -->
 <div class="card mt-4">

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Komparasi Sentimen{% endblock %}
+
+{% block content %}
+<div class="topbar flex-between">
+    <div>
+        <h1><i class="fas fa-balance-scale"></i> Komparasi Sentimen</h1>
+        <p style="margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px;">Detail Prediksi Data Uji (20%) antara ChatGPT dan Gemini AI.</p>
+    </div>
+</div>
+
+{% if not chatgpt_data and not gemini_data %}
+<!-- Empty State -->
+<div class="card" style="margin-top: 10px;">
+    <div class="card-body text-center" style="padding: 60px 20px;">
+        <i class="fas fa-flask" style="font-size: 48px; color: var(--border-color); margin-bottom: 15px;"></i>
+        <h3 style="color: var(--text-muted); margin-bottom: 10px;">Data Komparasi Belum Tersedia</h3>
+        <p style="color: #999; max-width: 500px; margin: 0 auto;">Silakan latih model terlebih dahulu di menu <strong>Klasifikasi</strong> agar sistem dapat mengekstrak prediksi pengujian.</p>
+        <a href="{{ url_for('main.klasifikasi') }}" class="btn btn-primary mt-4"><i class="fas fa-arrow-right"></i> Pergi ke Klasifikasi</a>
+    </div>
+</div>
+{% else %}
+
+<!-- Grafik Bar Chart Komparasi -->
+<div class="card mt-3">
+    <div class="card-header">
+        <i class="fas fa-chart-bar"></i> Grafik Perbandingan Sentimen
+    </div>
+    <div class="card-body">
+        <div style="height: 300px;">
+            <canvas id="komparasiChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Tabel ChatGPT -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100" style="margin-bottom: 0;">
+            <div class="card-header" style="background-color: #f8f9fa;">
+                <i class="fas fa-robot text-primary"></i> Data Pengujian: <strong>ChatGPT</strong>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <div style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover text-center mb-0" style="font-size: 13px;">
+                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                            <tr>
+                                <th style="text-align: left; width: 55%;">Ulasan</th>
+                                <th style="color: var(--success-color);">Positif</th>
+                                <th style="color: var(--danger-color);">Negatif</th>
+                                <th style="color: var(--warning-color);">Netral</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in chatgpt_data %}
+                            <tr>
+                                <td style="text-align: left; padding: 10px;">{{ row.text }}</td>
+                                <td>{% if row.predicted_label == 'positive' %}<i class="fas fa-check text-success"></i>{% endif %}</td>
+                                <td>{% if row.predicted_label == 'negative' %}<i class="fas fa-check text-danger"></i>{% endif %}</td>
+                                <td>{% if row.predicted_label == 'neutral' %}<i class="fas fa-check text-warning"></i>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not chatgpt_data %}
+                            <tr>
+                                <td colspan="4" class="text-muted py-4">Tidak ada data pengujian ChatGPT.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabel Gemini -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100" style="margin-bottom: 0;">
+            <div class="card-header" style="background-color: #f8f9fa;">
+                <i class="fas fa-brain text-success"></i> Data Pengujian: <strong>Gemini AI</strong>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <div style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover text-center mb-0" style="font-size: 13px;">
+                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                            <tr>
+                                <th style="text-align: left; width: 55%;">Ulasan</th>
+                                <th style="color: var(--success-color);">Positif</th>
+                                <th style="color: var(--danger-color);">Negatif</th>
+                                <th style="color: var(--warning-color);">Netral</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in gemini_data %}
+                            <tr>
+                                <td style="text-align: left; padding: 10px;">{{ row.text }}</td>
+                                <td>{% if row.predicted_label == 'positive' %}<i class="fas fa-check text-success"></i>{% endif %}</td>
+                                <td>{% if row.predicted_label == 'negative' %}<i class="fas fa-check text-danger"></i>{% endif %}</td>
+                                <td>{% if row.predicted_label == 'neutral' %}<i class="fas fa-check text-warning"></i>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not gemini_data %}
+                            <tr>
+                                <td colspan="4" class="text-muted py-4">Tidak ada data pengujian Gemini AI.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sertakan Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('komparasiChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Positif', 'Negatif', 'Netral'],
+                    datasets: [
+                        {
+                            label: 'ChatGPT',
+                            data: [
+                                parseInt("{{ stats.chatgpt_pos|default('0') }}"), 
+                                parseInt("{{ stats.chatgpt_neg|default('0') }}"), 
+                                parseInt("{{ stats.chatgpt_neu|default('0') }}")
+                            ],
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Gemini AI',
+                            data: [
+                                parseInt("{{ stats.gemini_pos|default('0') }}"), 
+                                parseInt("{{ stats.gemini_neg|default('0') }}"), 
+                                parseInt("{{ stats.gemini_neu|default('0') }}")
+                            ],
+                            backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                            borderColor: 'rgba(46, 204, 113, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
