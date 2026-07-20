@@ -136,34 +136,9 @@
 </div>
 {% endmacro %}
 
-{% if (is_multi and eval_data) or matrix %}
-
-{% if is_multi and eval_data %}
-<ul class="nav nav-tabs" id="evalTabs" role="tablist" style="margin-bottom: 20px;">
-    {% for ratio in ['80', '75', '70'] %}
-    <li class="nav-item" role="presentation">
-        <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-{{ ratio }}" data-bs-toggle="tab" data-bs-target="#pane-{{ ratio }}" type="button" role="tab" aria-controls="pane-{{ ratio }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" style="font-weight: 600;">
-            <i class="fas fa-columns"></i> Rasio {{ ratio }}:{{ 100 - ratio|int }}
-        </button>
-    </li>
-    {% endfor %}
-</ul>
-
-<div class="tab-content" id="evalTabsContent">
-    {% for ratio in ['80', '75', '70'] %}
-        {% if eval_data[ratio] %}
-            {% set m_data = eval_data[ratio] %}
-            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="pane-{{ ratio }}" role="tabpanel" aria-labelledby="tab-{{ ratio }}">
-                {{ render_evaluation(m_data['matrix'], m_data['accuracy'], m_data['metrics'], m_data['total_samples'], m_data['labels'], m_data['train_samples']) }}
-            </div>
-        {% endif %}
-    {% endfor %}
-</div>
-
-{% elif matrix %}
-<!-- Format Lama -->
+{% if matrix %}
+<!-- Menampilkan Evaluasi -->
 {{ render_evaluation(matrix, accuracy, metrics, total_samples, labels, train_samples) }}
-{% endif %}
 
 <!-- Tes Sentimen Manual -->
 <div class="card mt-4">

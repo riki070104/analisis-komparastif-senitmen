@@ -531,19 +531,16 @@ def evaluasi():
             with open(eval_file, 'r') as f:
                 eval_data = json.load(f)
                 
-            # Cek apakah format baru (multi-split) atau format lama
-            if '80' in eval_data:
-                return render_template('admin/evaluasi.html', eval_data=eval_data, is_multi=True)
-            else:
-                # Format lama
-                return render_template('admin/evaluasi.html',
-                                     matrix=eval_data.get('matrix'),
-                                     accuracy=eval_data.get('accuracy'),
-                                     metrics=eval_data.get('metrics'),
-                                     total_samples=eval_data.get('total_samples'),
-                                     labels=eval_data.get('labels'),
-                                     train_samples=eval_data.get('train_samples', 0),
-                                     is_multi=False)
+            # Selalu gunakan data '80' karena sekarang hanya memakai 80:20
+            data_to_pass = eval_data.get('80', eval_data)
+            
+            return render_template('admin/evaluasi.html',
+                                 matrix=data_to_pass.get('matrix'),
+                                 accuracy=data_to_pass.get('accuracy'),
+                                 metrics=data_to_pass.get('metrics'),
+                                 total_samples=data_to_pass.get('total_samples'),
+                                 labels=data_to_pass.get('labels'),
+                                 train_samples=data_to_pass.get('train_samples', 0))
         except Exception as e:
             flash(f'Gagal membaca hasil evaluasi: {str(e)}', 'danger')
             
